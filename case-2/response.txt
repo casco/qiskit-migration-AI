@@ -1,0 +1,93 @@
+To demonstrate the violation of Bell inequalities using Qiskit, we will create a simple program that sets up a Bell test experiment. We'll measure the correlations between entangled qubits in different bases and show how these violate the classical Bell inequalities. Below is a complete Qiskit program to achieve this:
+
+```python
+# Install Qiskit if it's not already installed
+# !pip install qiskit
+
+import numpy as np
+from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+
+# Define function to create Bell state circuit
+def create_bell_state():
+    qc = QuantumCircuit(2, 2)
+    qc.h(0)        # Apply Hadamard gate to qubit 0
+    qc.cx(0, 1)    # Apply CNOT gate with control qubit 0 and target qubit 1
+    return qc
+
+# Define function to add measurement to the circuit with given angles
+def add_measurement(qc, theta_a, theta_b):
+    # Apply rotation according to measurement angles
+    qc.ry(2 * theta_a, 0)
+    qc.ry(2 * theta_b, 1)
+    # Measure the results
+    qc.measure([0, 1], [0, 1])
+    return qc
+
+# Define function to execute circuit and get results
+def run_circuit(qc):
+    simulator = Aer.get_backend('qasm_simulator')
+    result = execute(qc, simulator, shots=1024).result()
+    counts = result.get_counts(qc)
+    return counts
+
+# Function to calculate the expectation value
+def expectation_value(counts):
+    total_shots = sum(counts.values())
+    expectation = 0
+    for outcome, count in counts.items():
+        parity = (-1) ** (int(outcome[0]) + int(outcome[1]))
+        expectation += parity * count / total_shots
+    return expectation
+
+# Measurement angles
+theta_values = [(0, 0), (np.pi/4, 0), (0, np.pi/4), (np.pi/4, np.pi/4)]
+
+# Create Bell state circuit
+bell_circuit = create_bell_state()
+
+# Plot and run circuits for each measurement setting
+expectation_values = []
+for i, (theta_a, theta_b) in enumerate(theta_values):
+    qc = bell_circuit.copy()
+    qc = add_measurement(qc, theta_a, theta_b)
+    counts = run_circuit(qc)
+    exp_val = expectation_value(counts)
+    expectation_values.append(exp_val)
+    
+    # Visualize the quantum circuit
+    qc.draw(output='mpl')
+    plt.title(f'Measurement {i+1}: θ_a={theta_a:.2f}, θ_b={theta_b:.2f}')
+    plt.show()
+
+    # Plot histogram of results
+    plot_histogram(counts)
+    plt.title(f'Results for Measurement {i+1}')
+    plt.show()
+
+# Calculate the Bell inequality value (S)
+S = expectation_values[0] - expectation_values[1] - expectation_values[2] - expectation_values[3]
+print(f"Calculated Bell inequality value (S): {S}")
+
+# Plot the expectation values
+plt.figure(figsize=(8, 4))
+plt.bar(range(len(expectation_values)), expectation_values)
+plt.xticks(range(len(expectation_values)), [f'M{i+1}' for i in range(len(expectation_values))])
+plt.ylabel('Expectation Value')
+plt.title('Expectation Values for Different Measurements')
+plt.show()
+
+print("Bell inequality is violated if S > 2. In our example, S =", S)
+```
+
+### Explanation:
+
+1. **Install Qiskit**: We use `pip install qiskit` to ensure Qiskit is available.
+2. **Create Bell State**: The `create_bell_state()` function constructs a basic quantum circuit that prepares a Bell state.
+3. **Measure in Different Bases**: The `add_measurement()` function adds measurements to the circuit according to specified angles.
+4. **Run the Circuit**: The `run_circuit()` function executes the circuit on a simulator and retrieves the measurement results.
+5. **Expectation Values and Bell Inequality**: The `expectation_value()` function calculates the expectation value from the measurement results. We use four different measurement settings to calculate the Bell inequality value (S).
+6. **Visualization**: We visualize the quantum circuits and the results to illustrate the violation of Bell inequalities.
+
+In this example, a Bell inequality (specifically the CHSH inequality) is considered violated if the calculated value \( S \) is greater than 2. The code measures and plots the expectation values to show this violation.

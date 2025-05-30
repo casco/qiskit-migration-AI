@@ -1,0 +1,11 @@
+Create a complete Qiskit program that demonstrates the violation of Bell inequalities.
+
+Requirements:
+- Use Version 1.0 of Qiskit
+- Include `pip` installation commands for any non-standard Python packages required (e.g., Qiskit).
+- The program should:
+  - Build and visualize the quantum circuits used.
+  - Use a simulator to run the circuits.
+  - Collect and plot the results to illustrate the violation of Bell inequalities.
+
+Ensure the code is self-contained and executable as-is in a standard Python environment.

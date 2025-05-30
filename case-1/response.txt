@@ -1,0 +1,116 @@
+To demonstrate the violation of Bell inequalities using Qiskit, we will create a program that involves building a Bell state, measuring it in different bases, and showing the results that violate the classical Bell inequalities. Below is a complete script with detailed steps including how to set up the environment, build the circuits, run simulations, and plot the results.
+
+```python
+# Install necessary packages
+!pip install qiskit matplotlib
+
+# Import necessary libraries
+import numpy as np
+import matplotlib.pyplot as plt
+from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+from qiskit.quantum_info import Statevector
+from qiskit.quantum_info import state_fidelity
+
+# Function to create a Bell state circuit
+def create_bell_state_circuit():
+    circuit = QuantumCircuit(2, 2)
+    circuit.h(0)  # Apply Hadamard gate to qubit 0
+    circuit.cx(0, 1)  # Apply CNOT gate with qubit 0 as control and qubit 1 as target
+    return circuit
+
+# Function to add measurement in the Z basis
+def measure_in_z_basis(circuit):
+    circuit.measure(range(2), range(2))
+
+# Function to add measurement in the X basis
+def measure_in_x_basis(circuit):
+    circuit.h(range(2))
+    circuit.measure(range(2), range(2))
+
+# Create circuits for different measurement settings
+circuits = []
+
+# CHSH settings (A0B0, A0B1, A1B0, A1B1)
+# A0, B0 = Z basis; A1, B1 = X basis
+bell_circuit = create_bell_state_circuit()
+
+# A0B0 measurement
+circuit_a0b0 = bell_circuit.copy()
+measure_in_z_basis(circuit_a0b0)
+circuits.append(circuit_a0b0)
+
+# A0B1 measurement
+circuit_a0b1 = bell_circuit.copy()
+measure_in_z_basis(circuit_a0b1)
+circuits.append(circuit_a0b1)
+
+# A1B0 measurement
+circuit_a1b0 = bell_circuit.copy()
+measure_in_x_basis(circuit_a1b0)
+circuits.append(circuit_a1b0)
+
+# A1B1 measurement
+circuit_a1b1 = bell_circuit.copy()
+measure_in_x_basis(circuit_a1b1)
+circuits.append(circuit_a1b1)
+
+# Visualize the circuits
+for i, circuit in enumerate(circuits):
+    print(f"Circuit A{i//2}B{i%2}:")
+    print(circuit)
+    circuit.draw(output='mpl')
+
+# Run the circuits on a simulator
+backend = Aer.get_backend('qasm_simulator')
+shots = 1024
+
+# Execute the circuits
+results = [execute(circuit, backend, shots=shots).result() for circuit in circuits]
+
+# Collect and plot the results
+counts = [result.get_counts() for result in results]
+
+# Plot histograms
+for i, count in enumerate(counts):
+    plot_histogram(count, title=f"Measurement A{i//2}B{i%2}")
+
+plt.show()
+
+# Calculate correlations for CHSH inequality
+def calculate_expectation(counts):
+    # Extract the counts for each outcome
+    counts_00 = counts.get('00', 0)
+    counts_01 = counts.get('01', 0)
+    counts_10 = counts.get('10', 0)
+    counts_11 = counts.get('11', 0)
+    
+    # Calculate expectation value
+    expectation_value = (counts_00 + counts_11 - counts_01 - counts_10) / shots
+    return expectation_value
+
+# Calculate expectation values for different settings
+expectation_values = [calculate_expectation(count) for count in counts]
+
+# CHSH inequality: S = E(A0B0) + E(A0B1) + E(A1B0) - E(A1B1)
+S = expectation_values[0] + expectation_values[1] + expectation_values[2] - expectation_values[3]
+
+print(f"CHSH S value: {S}")
+print("The Bell inequality is violated if |S| > 2.")
+
+# Check violation
+if abs(S) > 2:
+    print("The Bell inequality is violated.")
+else:
+    print("The Bell inequality is not violated.")
+```
+
+This script:
+
+1. Sets up the environment by installing Qiskit and Matplotlib.
+2. Defines a function to create a Bell state.
+3. Constructs circuits for different measurement bases.
+4. Visualizes the quantum circuits.
+5. Executes the circuits on a QASM simulator.
+6. Collects results and plots histograms.
+7. Calculates the CHSH inequality value

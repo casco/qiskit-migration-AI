@@ -1,0 +1,103 @@
+To demonstrate the violation of Bell inequalities using Qiskit, you can create a quantum program that simulates the Bell test using the CHSH (Clauser-Horne-Shimony-Holt) inequality. This involves setting up a quantum circuit that creates an entangled state, performing measurements in different bases, and analyzing the results to show the violation.
+
+Below is a complete Qiskit program that accomplishes this task. It includes the necessary package installations, circuit creation, simulation, and result analysis.
+
+```python
+# Installation commands for Qiskit
+# You can run these lines in a Jupyter notebook or a Python script to install the required packages.
+!pip install qiskit matplotlib
+
+import numpy as np
+from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+
+# Define a function to create a Bell state circuit
+def create_bell_state():
+    circuit = QuantumCircuit(2, 2)
+    circuit.h(0)          # Apply Hadamard gate to the first qubit
+    circuit.cx(0, 1)      # Apply CNOT gate with the first qubit as control and the second as target
+    return circuit
+
+# Define a function to add measurement to the circuit in different bases
+def add_measurement(circuit, angle_a, angle_b):
+    # Rotate qubit 0 by angle_a before measurement
+    circuit.ry(2 * angle_a, 0)
+    # Rotate qubit 1 by angle_b before measurement
+    circuit.ry(2 * angle_b, 1)
+    # Measure both qubits
+    circuit.measure([0, 1], [0, 1])
+    return circuit
+
+# Define angles for CHSH inequality
+angles = {
+    'a': 0,
+    'a_prime': np.pi / 4,
+    'b': np.pi / 8,
+    'b_prime': -np.pi / 8
+}
+
+# Create and visualize circuits for each measurement setting
+circuits = {}
+for setting in [('a', 'b'), ('a', 'b_prime'), ('a_prime', 'b'), ('a_prime', 'b_prime')]:
+    circuit = create_bell_state()
+    circuit = add_measurement(circuit, angles[setting[0]], angles[setting[1]])
+    circuits[setting] = circuit
+
+# Visualize the circuits
+for setting, circuit in circuits.items():
+    print(f"Circuit for setting {setting}:")
+    print(circuit.draw())
+
+# Use Aer simulator
+backend = Aer.get_backend('qasm_simulator')
+
+# Function to execute the circuit and get the result
+def run_circuit(circuit):
+    job = execute(circuit, backend, shots=1024)
+    result = job.result()
+    counts = result.get_counts(circuit)
+    return counts
+
+# Run each circuit and collect results
+results = {setting: run_circuit(circuit) for setting, circuit in circuits.items()}
+
+# Plot the results
+for setting, counts in results.items():
+    print(f"Results for setting {setting}:")
+    plot_histogram(counts)
+    plt.show()
+
+# Calculate correlation for each setting
+def correlation(counts):
+    total = sum(counts.values())
+    correl = 0
+    for outcome, count in counts.items():
+        # Convert outcome string to individual bits and calculate parity
+        parity = (1 if outcome.count('1') % 2 == 0 else -1)
+        correl += parity * count / total
+    return correl
+
+correlations = {setting: correlation(counts) for setting, counts in results.items()}
+
+# Calculate the CHSH parameter
+S = correlations[('a', 'b')] - correlations[('a', 'b_prime')] + correlations[('a_prime', 'b')] + correlations[('a_prime', 'b_prime')]
+
+print(f"CHSH parameter S: {S}")
+
+# The CHSH inequality is violated if |S| > 2
+if abs(S) > 2:
+    print("Bell inequality violated!")
+else:
+    print("Bell inequality not violated.")
+```
+
+### Explanation
+
+- **Circuit Construction**: The Bell state is created using a Hadamard gate followed by a CNOT gate. This sets up a maximally entangled state.
+- **Measurement Angles**: The measurement angles are chosen to demonstrate the CHSH inequality violation.
+- **Simulation**: The circuits are run on a local simulator (`qasm_simulator`), and the results are collected.
+- **Analysis**: The correlation for each measurement setting is computed, and the CHSH parameter \( S \) is calculated. If \( |S| > 2 \), the Bell inequality is violated, which demonstrates quantum entanglement.
+
+### Note
+Ensure you have a working Python environment with access to

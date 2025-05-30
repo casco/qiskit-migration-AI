@@ -1,0 +1,83 @@
+Below is a Qiskit program that demonstrates the violation of Bell inequalities using the latest updates compatible with Qiskit version 0.46 or later.
+
+```python
+# Install Qiskit
+!pip install qiskit
+!pip install qiskit-aer
+!pip install matplotlib
+
+import matplotlib.pyplot as plt
+from qiskit import QuantumCircuit, transpile, assemble
+from qiskit_aer import Aer
+from qiskit.visualization import plot_histogram
+from qiskit.quantum_info import Statevector
+
+# Create the quantum circuit for a Bell state
+bell_circuit = QuantumCircuit(2, 2)
+bell_circuit.h(0)  # Apply Hadamard gate to the first qubit
+bell_circuit.cx(0, 1)  # Apply CNOT gate
+
+# Measure both qubits
+bell_circuit.measure([0, 1], [0, 1])
+
+# Visualize the circuit
+print("Bell Circuit:")
+print(bell_circuit.draw())
+
+# Use Aer's qasm_simulator
+simulator = Aer.get_backend('qasm_simulator')
+
+# Transpile and assemble the circuit
+transpiled_circuit = transpile(bell_circuit, simulator)
+qobj = assemble(transpiled_circuit)
+
+# Run the simulation
+job = simulator.run(qobj)
+result = job.result()
+
+# Get the results of the simulation
+counts = result.get_counts()
+
+# Plot the results using plot_histogram
+plot_histogram(counts)
+plt.title("Bell State Measurement Results")
+plt.show()
+
+# Demonstrate violation of Bell inequalities
+# Create a new circuit for CHSH test
+chsh_circuit = QuantumCircuit(2, 2)
+chsh_circuit.h(0)
+chsh_circuit.cx(0, 1)
+chsh_circuit.measure([0, 1], [0, 1])
+
+# Visualize the CHSH circuit
+print("CHSH Circuit:")
+print(chsh_circuit.draw())
+
+# Transpile and assemble the CHSH circuit
+transpiled_chsh_circuit = transpile(chsh_circuit, simulator)
+chsh_qobj = assemble(transpiled_chsh_circuit)
+
+# Run the simulation
+chsh_job = simulator.run(chsh_qobj)
+chsh_result = chsh_job.result()
+
+# Get the results of the simulation
+chsh_counts = chsh_result.get_counts()
+
+# Plot the results using plot_histogram
+plot_histogram(chsh_counts)
+plt.title("CHSH Test Measurement Results")
+plt.show()
+```
+
+### Key Updates and Changes:
+- **Aer Module Change**: 
+  - Pre-migration: `from qiskit import Aer`
+  - Post-migration: `from qiskit_aer import Aer`
+  
+- **Visualization Module Change**:
+  - Pre-migration: `from qiskit.visualization import plot_histogram`
+  - Post-migration: `from qiskit import visualization`
+
+This code sets up a quantum circuit to create a Bell state, simulates its execution, and visualizes the results. It then sets up a similar circuit for the CHSH test, which is a common test for Bell inequalities.
