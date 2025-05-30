@@ -1,5 +1,6 @@
 # Initial steps
 
+```
 python3 -m venv venv
 
 source venv/bin/activate
@@ -7,7 +8,9 @@ source venv/bin/activate
 pip install openai
 
 pip freeze > requirements.txt
- 
+```
+
+
 # To recreate after clone
 
 ```
